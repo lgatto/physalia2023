@@ -181,3 +181,53 @@ sp2807 <- filterPrecursorScan(sp, 2807)
 
 ## Plot the MS1 spectrum of interest and highlight all the peaks that
 ## will be selected for MS2 analysis. (hint: plotSpectra())
+
+plotSpectra(sp2807[1])
+
+plotSpectra(sp2807[1], xlim = c(400, 1000))
+abline(v = precursorMz(sp2807)[-1], col = "red")
+
+
+plotSpectra(sp2807[1], xlim = c(400, 1000))
+
+## Zoom in mz values 521.1 and 522.5 to reveal the isotopic envelope
+## of that peak.
+
+pdf("spectrum.pdf")
+plotSpectra(sp2807[1], xlim = c(521.1, 522.5))
+abline(v = precursorMz(sp2807)[-1], col = "red")
+dev.off()
+
+## The plotSpectra() function is used to plot all 10 MS2 spectra.
+
+letters[3]
+letters[-1]
+
+sp2807[-1]
+
+plotSpectra(sp2807[-1])
+
+
+ms_2 <- sp2807[-1]
+
+plotSpectra(ms_2[7], xlim = c(126, 132))
+
+plotSpectra(ms_2[7], xlim = c(126, 132),
+            labels = letters)
+
+
+z <- ms_2[7]
+
+
+plotSpectra(z, xlim = c(126, 132))
+
+mzLabel <- function(z) {
+    pd <- peaksData(z)[[1]]
+    mylabels <- format(pd[, "mz"], digits = 4)
+    mylabels[pd[, "intensity"] < 1e5] <- ""
+    mylabels
+}
+
+plotSpectra(ms_2[7], xlim = c(126, 132),
+            labels = mzLabel,
+            labelCol = "red")
