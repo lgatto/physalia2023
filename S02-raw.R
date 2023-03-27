@@ -161,11 +161,16 @@ sp1 <- filterMsLevel(sp, 1)
 plot(rtime(sp1), tic(sp1), type = "l")
 abline(v = rtime(sp)[2807], col = "red")
 
+sp |>
+    filterMsLevel(1) |>
+    spectraData() |>
+    data.frame() |>
+    ggplot(aes(x = rtime,
+               y = totIonCurrent)) +
+    geom_line()
 
 scanIndex(sp)[2807]
 rtime(sp)[2807]
-
-
 
 which(scanIndex(sp1) == 2807)
 
@@ -231,3 +236,76 @@ mzLabel <- function(z) {
 plotSpectra(ms_2[7], xlim = c(126, 132),
             labels = mzLabel,
             labelCol = "red")
+
+## Filter MS2 level spectra and find any 2 MS2 spectra that have
+## matching precursor peaks based on the precursor m/z values.
+
+sp2 <- filterMsLevel(sp, 2L)
+
+anyDuplicated(precursorMz(sp2))
+
+sp2i <- sp2[which(precursorMz(sp2) == precursorMz(sp2)[37])]
+
+sp2i
+
+
+## plotSpectraOverlay(x, y) ## Spectra of length 2
+plotSpectraOverlay(sp2i, col = c("red", "steelblue"),
+                   xlim = c(150, 600))
+
+plotSpectraOverlay(sp2[c(32, 100)], col = c("red", "steelblue"),
+                   xlim = c(150, 600))
+
+
+## plotSpectraMirror(x) ## two Spectra of lengths 1
+plotSpectraMirror(sp2i[1], sp2i[2])
+
+plotSpectraMirror(sp2i[1], sp2[100],
+                  xlim = c(100, 600))
+
+BiocManager::install("RforMassSpectrometry/SpectraVis")
+
+library(SpectraVis)
+
+plotlySpectra(sp2i[1])
+
+browseSpectra(sp)
+
+
+plotSpectra(sp[2807], xlim = c(521.2, 522.5))
+grid()
+
+peaksData(sp[2807])[[1]] |>
+    as_tibble() |>
+    filter(mz > 521.2, mz < 521.4)
+
+
+## profile mode
+
+plotSpectra(sp[2807], xlim = c(521.2, 521.4))
+
+
+## peak picking / centroiding
+
+## centroided
+sp[2807] |>
+    pickPeaks() |>
+    plotSpectra(xlim = c(521.2, 522.5))
+
+peaksData(pickPeaks(sp[2807])) %>%
+    as_tibble() %>%
+    filter(mz > 521.2, mz < 521.4)
+
+pickPeaks(sp[2807]) %>%
+    filterIntensity(1e7) %>%
+    plotSpectra(xlim = c(521.2, 522.5))
+
+
+sp2 <- Spectra(f2)
+
+msLevel(sp2)
+centroided(sp2)
+
+table(msLevel(sp2), centroided(sp2))
+
+table(msLevel(sp), centroided(sp))
