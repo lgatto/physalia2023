@@ -292,9 +292,11 @@ sp[2807] |>
     pickPeaks() |>
     plotSpectra(xlim = c(521.2, 522.5))
 
-peaksData(pickPeaks(sp[2807])) %>%
-    as_tibble() %>%
+peaksData(pickPeaks(sp[2807])) |>
+    as_tibble() |>
     filter(mz > 521.2, mz < 521.4)
+
+library(magrittr)
 
 pickPeaks(sp[2807]) %>%
     filterIntensity(1e7) %>%
@@ -309,3 +311,35 @@ centroided(sp2)
 table(msLevel(sp2), centroided(sp2))
 
 table(msLevel(sp), centroided(sp))
+
+## A note on efficiency
+
+table(msLevel(sp))
+filterMsLevel(sp, 2)
+
+length(sp)
+
+length(filterMsLevel(sp, 2))
+
+sp[msLevel(sp) == 2]
+
+fsciex <- dir(system.file("sciex", package = "msdata"),
+              full.names = TRUE)
+
+sciex <- Spectra(fsciex)
+sciex
+
+range(intensity(sciex[1]))
+
+sciex2 <- filterIntensity(sciex, intensity = c(50000, Inf))
+
+
+range(intensity(sciex2[1]))
+
+plotSpectra(sciex[1])
+
+x11()
+
+plotSpectra(sciex2[1])
+
+## BiocParallel
