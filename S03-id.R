@@ -1,3 +1,5 @@
+library(rpx)
+library(pheatmap)
 library(tidyverse)
 library(rpx)
 library(Spectra)
@@ -190,7 +192,6 @@ sp |>
                y = totIonCurrent)) +
     geom_line()
 
-
 sp |>
     filterMsLevel(1) |>
     spectraData() |>
@@ -210,3 +211,127 @@ sp |>
 plotSpectra(sp2[234])
 
 ## Find an MS2 scan that has an identication score > 100
+
+i <- which(sp$MS.GF.RawScore > 100)[1]
+
+plotSpectra(sp[i])
+
+sp[i]$sequence
+
+nchar(sp[i]$sequence)
+
+calculateFragments(sp[i]$sequence)
+
+sp[i]
+
+addFragments(sp[i])
+
+mz(sp[i])[[1]]
+
+
+plotSpectra(sp[i], labels = addFragments,
+            labelPos = 3, labelCol = "red",
+            main = sp[i]$sequence)
+
+
+## Create a new Spectra object containing the MS2 spectra with
+## sequences "SQILQQAGTSVLSQANQVPQTVLSLLR" and
+## "TKGLNVMQNLLTAHPDVQAVFAQNDEMALGALR".
+
+k <- which(sp$sequence %in% c("SQILQQAGTSVLSQANQVPQTVLSLLR", "TKGLNVMQNLLTAHPDVQAVFAQNDEMALGALR"))
+
+sp_k <- sp[k]
+
+mat <- compareSpectra(sp_k)
+
+colnames(mat) <- rownames(mat) <- strtrim(sp_k$sequence, 2)
+
+pheatmap(mat)
+
+## Compare the spectra with the plotting function seen previously.
+
+sp_k
+
+plotSpectra(sp_k)
+
+
+plotSpectra(filterIntensity(sp_k, 1e4),
+            labels = addFragments, labelCol = "red")
+
+
+plotSpectraMirror(sp_k[1], sp_k[2], labels = addFragments,
+                  labelCol = "red", labelPos = 3)
+
+plotSpectraMirror(sp_k[3], sp_k[4], labels = addFragments,
+                  labelCol = "red", labelPos = 3)
+
+plotSpectraMirror(sp_k[1], sp_k[4], labels = addFragments,
+                  labelCol = "red", labelPos = 3)
+
+k2 <- sample(length(sp2id), 10)
+
+mat2 <- compareSpectra(sp2id[k2])
+
+sp2id[k2]$sequence
+
+spectraVariables(sp2id)
+
+summary(sp2id$experimentalMassToCharge - sp2id$calculatedMassToCharge)
+
+## Download the 3 first mzML and mzID files from the _PXD022816_
+## project from Morgenstern, David, Rotem Barzilay, and Yishai
+## Levin. 2021. “RawBeans: A Simple, Vendor-Independent, Raw-Data
+## Quality-Control Tool.” Journal of Proteome
+## Research. (https://doi.org/10.1021/acs.jproteome.0c00956.).
+
+px2 <- PXDataset("PXD022816")
+
+pxfiles(px2)
+
+fmz <- pxget(px2, grep("mzML$", pxfiles(px2), value = TRUE)[1:3])
+fmz
+
+pxget(px2, grep("mzML$", pxfiles(px2), value = TRUE)[4])
+
+fid <- pxget(px2, grep("mzID.gz$", pxfiles(px2), value = TRUE)[1:3])
+
+## Generate a Spectra object and a table of filtered PSMs.
+
+sp <- Spectra(fmz)
+
+sp
+
+table(basename(sp$dataOrigin))
+
+table(msLevel(sp), centroided(sp))
+
+filterMsLevel(sp, 1) |>
+    spectraData() |>
+    as_tibble() |>
+    ggplot(aes(x = rtime,
+               y = totIonCurrent,
+               colour = basename(dataOrigin))) +
+    geom_line()
+
+id <- PSM(fid)
+
+id_filtered <- filterPSMs(id)
+
+table(basename(id_filtered$spectrumFile))
+
+## Visualise the total ion chromatograms and check the quality of the
+## identification data by comparing the density of the decoy and
+## target PSMs id scores for each file.
+
+
+as_tibble(id) |>
+    ggplot(aes(x = MetaMorpheus.score,
+               colour = isDecoy)) +
+    geom_density() +
+    facet_wrap(~ spectrumFile)
+
+table(id$isDecoy)
+
+summary(id$PSM.level.q.value)
+
+table(id$rank)
