@@ -164,3 +164,49 @@ spectraVariables(sp)
 
 ## Verify that the identification data has been added to the correct
 ## spectra: no identifications for MS1, only to (some) MS2 scans.
+
+all(is.na(filterMsLevel(sp, 1)$sequence))
+
+sp2 <- filterMsLevel(sp, 2)
+
+table(!is.na(sp2$sequence))
+
+sp2id <- sp2[!is.na(sp2$sequence)]
+
+sp2id
+
+
+sp <- countIdentifications(sp)
+
+spectraVariables(sp)
+
+table(msLevel(sp), sp$countIdentifications)
+
+sp |>
+    filterMsLevel(1) |>
+    spectraData() |>
+    data.frame() |>
+    ggplot(aes(x = rtime,
+               y = totIonCurrent)) +
+    geom_line()
+
+
+sp |>
+    filterMsLevel(1) |>
+    spectraData() |>
+    as_tibble() |>
+    ggplot(aes(x = rtime,
+               y = totIonCurrent)) +
+    geom_line(alpha = 0.25) +
+    geom_point(aes(colour =
+                       ifelse(countIdentifications == 0,
+                              NA,
+                              countIdentifications)),
+               size = 2,
+               alpha = 0.5) +
+    labs(colour = "Nb ids")
+
+
+plotSpectra(sp2[234])
+
+## Find an MS2 scan that has an identication score > 100
