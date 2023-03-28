@@ -101,6 +101,10 @@ id_filtered2 <-
     filterPsmDecoy(id) |>
     filterPsmRank()
 
+describeProteins(id_filtered2)
+
+describePeptides(id_filtered2)
+
 am <- makeAdjacencyMatrix(id_filtered2)
 dim(am)
 
@@ -121,3 +125,42 @@ dims(cc)[i, ]
 cx <- connectedComponents(cc, 1082)
 
 plotAdjacencyMatrix(cx)
+
+## Starting from the _non-filtered_ identification data (that still
+## contains the decoy hits), compare the distribution of raw
+## identification scores of the decoy and non-decoy hits. Interpret
+## the figure.
+
+as_tibble(id) |>
+    ggplot(aes(x = MS.GF.RawScore,
+               colour = isDecoy)) +
+    geom_density()
+
+id_filtered$MS.GF.QValue
+
+id_filtered
+
+sp
+
+names(id_filtered)
+
+spectraVariables(sp)
+
+table(table(id_filtered$spectrumID))
+
+which(table(id_filtered$spectrumID) == 4)
+
+id_filtered[id_filtered$spectrumID == "controllerType=0 controllerNumber=1 scan=5490", ] |>
+    as.data.frame() |>
+    DT::datatable()
+
+id_filtered <- reducePSMs(id_filtered, id_filtered$spectrumID)
+
+sp <- joinSpectraData(sp, id_filtered,
+                      by.x = "spectrumId",
+                      by.y = "spectrumID")
+
+spectraVariables(sp)
+
+## Verify that the identification data has been added to the correct
+## spectra: no identifications for MS1, only to (some) MS2 scans.
