@@ -56,7 +56,7 @@ id2 <- reducePSMs(id, id$spectrumID)
 
 (j <- which(id2$spectrumID == "controllerType=0 controllerNumber=1 scan=1774"))
 
-data.frame(id[i, ])[, 15]
+data.frame(id[i, ])[, c(1, 15)]
 
 id2[j, "DatabaseAccess"]
 
@@ -64,13 +64,60 @@ id_tbl <- as_tibble(id)
 
 ## Remove decoy hits
 
-
+id_tbl <- id_tbl |>
+    filter(!isDecoy)
 
 ## Keep first rank matches
 
+id_tbl <- id_tbl |>
+    filter(rank == 1)
 
 ## Remove shared peptides. Start by identifying scans that match
 ## different proteins. For example scan 4884 matches proteins
 ## XXX_ECA3406 and ECA3415. Scan 4099 match XXX_ECA4416_1,
 ## XXX_ECA4416_2 and XXX_ECA4416_3. Then remove the scans that match
 ## any of these proteins.
+
+mltm <- id_tbl |>
+    group_by(spectrumID) |>
+    mutate(nProts = length(unique(DatabaseAccess))) |>
+    select(spectrumID, nProts) |>
+    filter(nProts > 1)
+
+id_tbl <- id_tbl |>
+    filter(!spectrumID %in% mltm$spectrumID)
+
+id_filtered <- filterPSMs(id)
+
+describeProteins(id_filtered)
+
+describeProteins(filterPsmDecoy(id))
+
+describePeptides(id_filtered)
+
+describePeptides(filterPsmDecoy(id))
+
+id_filtered2 <-
+    filterPsmDecoy(id) |>
+    filterPsmRank()
+
+am <- makeAdjacencyMatrix(id_filtered2)
+dim(am)
+
+cc <- ConnectedComponents(am)
+
+connectedComponents(cc, 1)
+
+connectedComponents(cc, 527)
+
+connectedComponents(cc, 38)
+
+connectedComponents(cc, 920)
+
+i <- which(nrows(cc) > 2 & ncols(cc) > 2)
+
+dims(cc)[i, ]
+
+cx <- connectedComponents(cc, 1082)
+
+plotAdjacencyMatrix(cx)
