@@ -262,7 +262,7 @@ cptac <- aggregateFeatures(cptac,
                            fun = colMedians,
                            na.rm = TRUE)
 
-## MsCoreUtils::robustSummary
+
 
 cptac
 
@@ -337,6 +337,41 @@ k <- filter(res, is.na(t)) |>
     pull(1)
 
 assay(prots[k, ])
+
+res |>
+    ggplot(aes(x = logFC,
+               y = -log10(adj.P.Val),
+               colour = TP)) +
+    geom_point() +
+    geom_vline(xintercept = c(-1, 1)) +
+    geom_hline(yintercept = -log10(0.05)) +
+    scale_color_manual(values = c("black","red"))
+
+
+
+cptac <- aggregateFeatures(cptac,
+        "lognorm_peptides",
+        name = "proteins_rob",
+        fcol = "Leading.razor.protein",
+        fun = MsCoreUtils::robustSummary,
+        na.rm = TRUE)
+
+plot(cptac)
+
+
+
+prots <- getWithColData(cptac, "proteins_rob")
+
+design <- model.matrix(~ prots$condition)
+fit <- lmFit(assay(prots), design)
+fit <- eBayes(fit)
+
+res <- topTable(fit, coef = "prots$conditionB",
+         number = Inf) |>
+    rownames_to_column("protein") |>
+    as_tibble() |>
+    mutate(TP = grepl("UPS", protein))
+
 
 res |>
     ggplot(aes(x = logFC,
